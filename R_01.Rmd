@@ -1,0 +1,591 @@
+
+# Introduction to R
+
+R is an interpreted language, which means it can be used interactively: we can type some code, hit execute and see the results instantly. This is different from compiled languages such as C or C++ where you must first compile code into an executable file, then run it.
+
+## R is an interpreted language (just like bash!)
+
+
+```{r}
+2 + 3^5 
+```
+
+
+```{r}
+rnorm(10)
+```
+
+
+### Printing results
+
+By default, the result on the last line is displayed in the Jupyter notebook. To see other lines, use the `print` function.
+
+
+```{r}
+print(1 * 2 * 3 *4)
+print(11 %% 3 == 1)
+10 > 1
+```
+
+### Getting help
+
+Type something and hit the tab key - this will either complete the R command for you (if unique) or present a list of opitons.
+
+Use ?topic to get a description of `topic`, or more verbosely, you can also use `help(topic)`. 
+
+
+```{r}
+?seq
+```
+
+Use example to see usage examples.
+
+
+```{r}
+example(seq)
+```
+
+
+```{r}
+apropos("seq")
+```
+
+
+Finally, you can always use a search engine - e.g. Googling for "how to generate random numbers from a normal distribution in R" returns:
+R Learning Module: Probabilities and Distributions
+www.ats.ucla.edu › stat › r › modules
+University of California, Los Angeles
+Generating random samples from a normal distribution ... (For more information on the random number generator used in R please refer to the help pages for the  ...
+
+R: The Normal Distribution
+https://stat.ethz.ch/R-manual/R-devel/library/.../Normal.html
+ETH Zurich
+Normal {stats}, R Documentation ... quantile function and random generation for the normal distribution with mean equal to mean and ... number of observations.
+
+CASt R: Random numbers
+astrostatistics.psu.edu/.../R/Random.html
+Pennsylvania State University
+It is often necessary to simulate random numbers in R. There are many functions available to ... Let's consider the well-known normal distribution as an example: ?Normal .... Creating functions in R, as illustrated above, is a common procedure.
+
+
+
+## Basic Programming Concepts
+
+The following sections introduce some basic programming concepts within the context of R, but they are common ingredients in any programming language
+
+    - Style
+    - Variable Assignment
+    - Data Types
+    - Operators
+    - Looping and branching
+    - Errors and debugging
+    
+### Style
+
+Programming style (how to name things, how much blank space to use, etc.) is an important part of creating a readable program. It's beyond our scope to cover this in detail, but it would be a good idea to review an R style guide if you plan to write a lot of R code. Different people have slightly different conventions, but this guide by Hadley Wickham is pretty widely used:
+
+http://adv-r.had.co.nz/Style.html
+
+It's 'based' on [Google's R style guide](https://google.github.io/styleguide/Rguide.xml), but some of the recommendations are in direct conflict. The most important thing is to try to be *consistent*. 
+
+### Variable Assignment
+
+
+#### Assigning to variables
+
+Variable assignments in R are made using the `<-` operator, but note that the `=` sign can also be used for assignments. As the saying goes, just because you *can*, doesn't mean you *should*. It is considered best practice to use `<-` for assignments in R (and we'll see it's rather nice in tidyverse, because we can also use `->`)
+
+
+```{r}
+x <- 3
+y <- 5
+
+z <- x * y
+
+z
+```
+
+
+#### Atomic Types
+
+When we assign variables in R (and in any programming language), they are assigned a 'type' (implicitly or explicitly). Some common types are:
+
+- numeric
+  
+  In base R, this includes both floating points (decimal) and integers (e.g. 1.2, 3.14159, 15). Tidyverse, with tibbles also include the `dbl` type.
+
+
+- integer
+
+  Non-floating point number (e.g. 1, 2, -4, etc., but not 1.2, 3.14159,...)
+ 
+- logical
+  
+  TRUE or FALSE
+
+- character
+
+  Words and letters. NB: numbers can be treated as characters too - we'll do some examples that illustrate that.
+
+We can create larger structures with the above atomic types:
+
+- vector
+
+  An object that contains a list of only one atomic type. <br><br>
+
+- matrix
+
+  A 2-dimensional array of one atomic type. <br><br>
+
+- list
+
+  Like a vector, but elements can be *anything* - different atomic types, other higher order structures, other lists, etc. <br><br>
+  
+- dataframe
+
+  A 2-dimensional array where each column must be a vector and all are the same length. <br><br>
+  
+- tibble
+
+  New version of dataframe. We'll talk more about this in future lectures.
+  
+#### Operators
+  
+Once we have variables of different types, we usually want to *do* something with them. That can mean anything from simple arithmetic to summaries to custom made R functions. Here, we will discuss simple operators.
+
+##### Arithmetic operators
+
+-  *, + , - , /
+
+These all do what you expect to numbers (numeric types), but things get a little tricky when we have vectors and matrices. To be explicit, the above operators are multiplication, addition, subtraction and division, respectively.<br><br>
+
+##### Logical Operators
+
+- \>, <, ==, !=, >=, <=
+
+The above compare variables and return a 'logical' result (TRUE or FALSE). NOTE: the comparison operator for equals is `=`<br><br>
+
+- &, |
+
+The above are 'AND' and 'OR' logical operators, respectively. We can combine the previous operators with these to form complex logical queries. 
+
+<!-- #region -->
+#### Exercises
+
+
+1. **Using arithmetic operators on numbers.**
+    Multiply 3 times 4 and add 2 to the result
+                                                           
+2. **Assigning variables**
+   Assign 3 to the variable x, 4 to the variable y and 2 to the variable z. Multiply x times y and add z to the result. Assign this value to a variable called w.
+   
+3. **Data Types**
+   Define two variables of the following classes: numeric, character, and logical and by assigning names (of your choice) to values (of your choice).
+   
+4. **Operators**
+   Use the variables above to find the results of the operators *, +, -, /, <, >, ==, !=, <=, >=. Which variables work with which data classes?
+
+<!-- #endregion -->
+
+```{r}
+# Your code here
+```
+
+
+```{r}
+# Your code here
+```
+
+
+```{r}
+# Your code here
+```
+
+```{r}
+# Your code here
+```
+
+### Basic Programming continued
+
+#### Loops and Branching
+
+Sometimes, actually, nearly all the time, we want to repeat an operation or series of operations over many instances of a variable. For example, suppose I have a list of numbers and I want to double them all. This is a very simple example, and the first way I will show you to do it is *exactly the wrong way* in R. But we need simple examples to learn, so here we go.
+
+There are a couple of ways to make a loop, depending on whether or not you know how many iterations will be required when you write the code.
+
+A ``for`` loop is a loop that repeats over something called an iterator. The simplest example would be a count, say I want to do something 6 times. Then a ``for`` loop may be used. Doubling a list of known length calls for a ``for`` loop. (I'm kinda lying here... will clarify this in a bit.)
+
+A ``while`` loop is used when conditions during execution of the code determine when the loop is terminated. Suppose we have a list of coin toss outcomes, and we want to count how many flips it took to get 3 heads. We don't know how many iterations the loop will take, but we do have a condition for stopping.
+
+
+
+```{r}
+## for loop example.
+
+# The seq function creates a sequence according to our instructions
+
+v <- seq(from = 2, to = 20, by = 3)
+
+print(v)
+
+
+for (i in 1:length(v)) {
+    v[i] <- 2*v[i]
+}
+
+print(v)
+```
+
+The ``i`` in the above ``for`` loop is called an *iterator*. At the first step, ``i`` is *initialized* to 1 (because the code tells it to start at 1 and end at the length of v, with the ``in 1:length(v)`` statement.  Each time the code in the body is executed, it is incremented (in this case, sequentially, one at a time). Iterators can be much fancier though. Here are a few examples:
+
+
+```{r}
+## for loop example
+
+iterator_variable <- c(1,10,32,1.45)
+
+
+for ( i in iterator_variable){
+    print(i)
+}
+```
+
+```{r}
+## for loop example
+
+iterator_variable <- list(1,10,32,1.45,"the", "quick brown fox")
+
+
+for ( i in iterator_variable){
+    print(i)
+}
+```
+
+## while loop example
+
+I've removed this example in the interest of saving time. We don't really use while loops all that often!
+
+
+#### Exercise
+
+ Write a ``for`` loop to print the index of each success in ``samples``.
+
+
+
+### The Next Level - vectors, matrices, functions, etc.
+
+#### Avoiding loops: Vectorization
+
+In R, and in other scripting languages, it is usually best to avoid loops when possible. Historically, looping in interpreted languages was slow. Nowadays, the issue is more with programming style, readability and lowering the possibilty of errors.
+
+We avoid loops by using what is called 'vectorization'. In other words, we use functions that work on whole vectors at once, rather than one element at a time (of course, at the lowest level, the code is iterating over each element. It is just happening using very fast machine code.)
+
+Many operations in R are vectorized. For example, we just used a ``for`` loop to double the elements of a vector. We could have done this another way:
+
+
+```{r}
+## Vectorization example
+
+v <- seq(from = 2, to = 20, by = 3)
+
+print(v)
+
+print (2*v)
+
+```
+
+R interprets the multiplication operator to do componentwise multiplication (because it's the only thing that 'makes sense'). Suppose we have two vectors of the same length. What does ``*`` do?
+
+
+```{r}
+v <- seq(from = 2, to = 20, by = 3)
+
+w <- seq(from = 1, to = 21, by = 3)
+
+print(v)
+print(w)
+
+print(v*w)
+```
+
+R has vectorization built in to many functions. In practice, if you ever feel you need to code a loop, you should look do some googling and see if there is another way. 
+
+We'll first talk a bit more about vectors, matrices and lists, and then we will cover some common R functions that take these as arguments.
+
+
+#### Exercises
+
+1. Create the vector (1,2,3,4,5,6) using the ``seq`` command in R.
+
+2. Add 2 to every element in the vector.
+
+3. Square every element of the original vector.
+
+
+#### Vectors, lists, and matrices
+
+For the purposes of this course we will think of vectors as lists of numbers and matrices as two-dimensional arrays of numbers.
+
+##### Creating vectors lists and matrices
+
+- The *concatenate* function in R builds vectors. We can also obtain vectors from other functions as we have seen in the start of these notes with the function ``seq`` <br><br>
+
+- Matrices are built with the command ``matrix``. They can also be constructed from vectors or returned from certain functions.<br><br>
+
+- Lists are created with the ``list`` function.
+
+```{r}
+## Example of vector creation
+
+v <- c(1,2,3,4)
+print(v)
+
+w <- c("This", "is", "a", "character", "vector")
+print(w)
+```
+
+```{r}
+## Example of matrix creation
+
+## First just create a vector of entries
+matrix_entries <- c(1,2,3,4,5,6,7,8,9,10,11,12)
+
+M <- matrix(matrix_entries, ncol = 3, nrow = 4)
+print(M)
+
+matrix_entries <- c("This", "is", "a", "character", "matrix", "with", "two", "rows")
+N <-  matrix(matrix_entries, nrow = 2)
+print(N)
+```
+
+```{r}
+## We can create matrices of different dimensions
+matrix_entries <- c("This", "is", "a", "character", "matrix", "with", "two", "columns")
+
+
+N <- matrix(matrix_entries, ncol = 2, nrow = 4)
+print(N)
+```
+
+```{r}
+## add rows or columns with row bind (``rbind``) or column bind (``cbind``)
+
+## First create a vector of the appropriate length:
+
+new_column <- rep(1,4)
+
+P <- cbind(M, new_column)
+print(P)
+```
+
+#### Examples
+
+1. Create 3 vectors, one using concatenate, one using ``rep`` and one using ``seq``
+
+2. Create 3 matrices: one 2x2, one 6x4, one a 4x4 with ones on the diagonal and zeroes everywhere else.
+
+3. Use cbind and rbind to add one row and one column to the 6x4 matrix.
+
+
+```{r}
+# Your code here
+```
+
+#### Common Operations on Vectors
+
+Two major categories of vector operations are
+
+- Componentwise operations
+- Summary operations
+
+We have already seen some componentwise operations (e.g. the doubling example). Let's look at some summary operations and we will do some more componentwise in the examples.
+
+
+```{r}
+## Sum of the components of a vector
+
+v <- c(1,2,5,8,9,10)
+sum(v)
+```
+
+
+```{r}
+## mean
+
+mean(v)
+```
+
+
+```{r}
+## median
+
+median(v)
+```
+
+
+#### Exercises
+
+1. Create two vectors length 3 using the concatenate function. What happens when you add them using `+`?
+
+2. Create a third vector of length 2. What happens if you try to add that vector to one of the others?
+
+3. Create another vector of length 4. Add it to the vector of length 2. What do you observe?
+
+4. Find the sum, mean and median of your vector from part 3.
+
+
+```{r}
+## Your code here
+```
+
+#### Functions
+
+*NOTE: I am including this material for advanced learners. We will not cover it in class, but feel free to ask questions in breakout rooms, after class or at office hours! For now, we skip to lists and dataframes.*
+
+A function is code that behaves like a black box - you give it some input and it returns some output. Functions are essential because they allow you to design potentially complicated algorithms without having to keep track of the algorithmic details - all you need to remember are the function name (which you can search with `apropos` or by prepending `??` to the search term), the input arguments (TAB provides these), and what type of output will be generated. Most of R's usefulness comes from the large collection of functions that it provides - for example, `library()`, `seq()`, `as.fractions()` are all functions. You can also write your own R functions - this will be covered in detail in a later session - but we show the basics here.
+
+##### Creating a function
+
+A function has the following structure
+
+```{r}
+function_name <- function(arguments) {
+    body_of_function
+    return(result)
+}
+```
+
+**function_name** is defined by the user (you). It can be anything you like, but meaningfulnames are encouraged to make code more readable to humans. 
+
+**function** is a keyword (one that has special meaning to R). It tells R that this is a function you are defining (as opposed to a variable).
+
+**arguments** are inputs to the function. Usually, when you write a function, you want it to do something to a variable or variables.
+
+**body_of_function** is a list of R commands. They are whatever you wish this function to do with the arguments.
+
+**return** is a keyword. It tells R to send something back to the code that 'called' it.
+
+**result** is user-defined. It is whatever you want R to send back to the code that called this function.
+
+
+The simple example below will make this explicit.   
+
+
+```{r}
+MyFunc <- function(a, b) {
+    c <- a * b
+    d <- a + 2*b
+    return(d)
+}
+```
+
+**function_name** is MyFunc
+
+**arguments** are a and b
+
+**body_of_function** is
+
+      c <- a * b
+      d <- a + 2 * b
+
+**result** is d
+
+
+```{r}
+MyFunc(5, 4)
+```
+
+
+```{r}
+MyFunc(b = 4, a = 5)
+```
+
+
+```{r}
+MyFunc(4, 5)
+```
+
+
+14
+
+
+#### Exercises
+
+1. Write a function that takes as input principal, interest rate, compoundings per period and number of periods and returns current amount.
+
+2. Write a function that takes as input two points, x and y, and returns the distance between them.
+
+
+### Lists and Data Frames
+
+A more general data structure in R is something called a list. Lists can have elements that are pretty much anything. For example, we can create a list of three members whose first element is a character vector, second element is a matrix and a third is a numeric vector. There is no restriction on length or type. Lists can even have other lists as elements. 
+
+This is important, because Bioconductor packages often make use of something called S4 objects. These are really just complicated lists (with functions that act on them). 
+
+#### Simple list
+
+
+```{r}
+a <- c("a", "character", "vector")
+b <- matrix(1:12, nrow = 4)
+c <- 2:5
+
+print(a)
+print(b)
+print(c)
+
+my_list <- list(first = a, second = b, third = c)
+
+print(my_list)
+```
+
+```{r}
+my_list[1]
+```
+
+
+```{r}
+my_list["second"]
+```
+
+
+```{r}
+my_list$third
+```
+
+
+The `$` is probably the most often used, but there is a lot of old R code out there where lists are accessed by the element number (you would also use element number when looping over a list, but you should probably not be doing that anyway!) In tidyverse (dplyr package), we use the function `select` to reference columns of dataframes.
+
+#### Data frames
+
+Data frames are lists where each element has the same number of columns. This is the data structure most often seen in R code, and many functions are specialized to work on them easily. We can create one from scratch:
+
+
+```{r}
+names <- c("bast", "dash", "chestnut", "tibbs")
+species <- c("cat", "cat", "dog", "dog")
+ages <- c(11, 11, 9, 10)
+
+df <- data.frame(name = names, species = species, age = ages)
+df
+```
+
+
+R also has many built-in data frames that can be used to experiment or for examples.
+
+
+```{r}
+head(iris)
+
+hist(iris$Petal.Length)
+```
+
+
+<!-- #region -->
+#### Examples
+
+1. Explore the data frame mtcars. What variables does it contain? What are their data types?
+
+2. What is the average miles-per-gallon for a car with 4 cylinders? How about 8?
+
+3. Plot a histogram of the vehicle weight.
