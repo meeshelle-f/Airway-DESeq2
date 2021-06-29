@@ -1,0 +1,231 @@
+---
+title: "SummarizedExperiment_RNAorChIPSeq"
+author: "Michelle"
+date: "6/25/2021"
+output:
+  html_document: default
+  pdf_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+Summary:
+RNA-seq transcriptome profiling PMID:24926665. Glucocorticoid MOA to suppress inflammation in ASM not understood. 4 primary human airway smooth muscle (ASM) cell lines were treated with or without dexamethasone, a glucocorticoid. Identified 316 DEGs, including DUSP1, KLF15, PER1, TSC22D3, C7, CCDC69, and CRISPLD2 glucocorticoid-responsive genes. See https://github.com/blancahimes/taffeta
+
+
+SummarizedExperiment is a matrix class containing rows of interest (genes, transcripts, etc.) and columns featuring samples that's ideal for sequencing based experiments (RNAseq, ChIPseq).  
+
+
+Goals:
+Reduce file sizes with basic filtering
+Be able to extract counts from metadata, export to Galaxy, and work with SummarizedExperiments
+Analyze DEseq2 results on a volcano plot (x= -log2(FC), y= -log10(p))
+Convert gene IDs
+Identify top up (final_FC_1) and down (final_FC) regulated DEGs  
+
+```{r packages, echo=TRUE}
+library(SummarizedExperiment)
+library(BiocManager)
+BiocManager::install("airway")
+data(airway, package="airway")
+se= airway
+se
+
+assays(se)$counts # rows represent gene transcripts. columns represent samples. 
+
+airway_counts= data.frame(assays(se)$counts) # 64102 observations
+
+airway_counts= airway_counts[rowSums(airway_counts)> 0,] # filter to 33469 observations 
+
+```
+
+```{r optional, echo=FALSE}
+
+rowRanges(se) # rowRanges calculates the min and max of each row (column) of matrix. 
+
+colData(se) #contains descriptive columns in dataframe
+
+levels(se$dex) #[1] "trt"   "untrt"
+
+se[,se$dex=="trt"] # subset rows of dexamethasone treated samples by pulling "trt" from dex col.
+
+dim(se) # [1] 64102     8
+dim(se[,se$dex=="trt"]) # [1] 64102     4
+# notice that rows are reduced from 8 to 4 ^ 
+
+se[1:5,1:3] # subset first 5 transcripts and first 3 samples
+
+```
+```{r optional metadata, echo=FALSE}
+#access associated experimental methods, publications, and abstract
+metadata(se)
+
+#store formula 
+metadata(se)$formula= counts ~ dex +albut
+metadata(se)
+
+#data was stored in a GRangesList object, where  list element corresponds to gene transcript and ranges in GRanges correspond to exons on transcript.
+
+```
+```{r optional export for Galaxy, echo=FALSE}
+
+colnames(airway_counts)
+#[1] "SRR1039508" "SRR1039509" "SRR1039512" "SRR1039513" "SRR1039516" "SRR1039517"
+#[7] "SRR1039520" "SRR1039521"
+
+colnames(airway_counts)=c("1_untreated","2_treated", "3_untreated" , "4_treated","5_untreated","6_treated", "7_untreated", "8_treated") 
+```
+
+```{r construct SummarizedExperiment, echo=FALSE}
+
+nrows=200
+ncols=6
+
+#runif(n, min = 0, max = 1)
+#where n = number of observations, and if length (n) > 1 then the length is the number. If min and max are not specified, 0 and 1 are assumed. runif generates random deviates. 
+#counts is just a matrix of random numbers
+counts=matrix(runif(nrows * ncols, 1, 1e4), nrows)
+ 
+#GRanges is a vector of genomic locations. GRanges(seqnames, ranges, strand, mcols, seqinfo, seqlengths)
+rowRanges= GRanges(rep(c("chr1","chr2"), c(50,150)),
+                   IRanges(floor(runif(200, 1e5, 1e6)), width=100),
+                   strand=sample(c("+","-"), 200, TRUE),
+                   feature_id=sprintf("ID%03d", 1:200))
+
+#generate S4 vector with 6 rows
+colData= DataFrame(Treatment=rep(c("ChIP", "Input"), 3), row.names=LETTERS[1:6])
+
+SummarizedExperiment(assays=list(counts=counts),
+                     rowRanges=rowRanges, colData=colData)
+
+#notice rowData (aka dataframe) is not necessary 
+
+SummarizedExperiment(assays=list(counts=counts),
+                     colData=colData)
+```
+
+```{r DESeq2, echo=FALSE}
+
+library("airway")
+data("airway")
+
+se=airway #if need to reset
+
+library(DESeq2)
+
+ddsSE=DESeqDataSet(se, design = ~cell+dex) #similar process as shown in metadata ^ 
+
+ddsSE # DESeqDataSet (dds) of se. dim: 64102 8 
+
+keep=rowSums(counts(ddsSE)) >= 10 #Non-specific pre-filtering helps reduce file size, be mindful! 
+
+ddsSE= ddsSE[keep,] # reduced from 70 to 47MB 
+
+ddsSE$dex=factor(ddsSE$dex, levels = c("untrt", "trt"))
+ddsSE$dex=relevel(ddsSE$dex, ref="untrt")
+ddsSE$dex=droplevels(ddsSE$dex)
+
+ddsSE=DESeq(ddsSE)
+res=results(ddsSE)
+res # log2 fold change (MLE): dex trt vs untrt. DataFrame with 22369 rows and 6 columns
+
+res=results(ddsSE, name="dex_trt_vs_untrt")
+res=results(ddsSE, contrast=c("dex","trt","untrt"))
+
+summary(res) # no outliers
+sum(res$padj <.1, na.rm=TRUE) # [1] 4834
+
+res05= results(ddsSE, alpha=.05)
+resOrdered=res05[order(res05$pvalue),]
+
+summary(res05) # no outliers
+sum(res05$padj <.05, na.rm=TRUE) # [1] 4030 
+
+#FC is downregulated DEGs, FC_1 is upregulated DEGs 
+FC=data.frame(resOrdered[resOrdered$log2FoldChange < -2,]) #either res or res05 produce same dims
+dim(FC) # [1] 366   6
+
+FC_1=data.frame(resOrdered[resOrdered$log2FoldChange > 2,])#either res or res05 produce same dims
+dim(FC_1) # [1] 310   6
+
+```
+
+```{r Volcano plot, echo=FALSE}
+#plot
+#plot(res05$log2FoldChange, -log10(res$padj), col=cols, panel.first=grid(), main="Volcano plot Res", xlab="Effect size: log2(fold-change)", ylab="-log10(adjusted p-value)",pch=20, cex=0.6)
+
+#abline(v=0)
+#abline(v=c(-1,1), col="brown")
+#abline(h=-log10(alpha), col="brown")
+```
+
+```{r Convert FC ensemble to gene symbol & export xlsx, echo=FALSE}
+
+BiocManager::install("EnsDb.Hsapiens.v79")
+library(EnsDb.Hsapiens.v79)
+library(org.Hs.eg.db)
+library("biomaRt")
+
+ensemblsIDS= row.names(FC) 
+
+symbols <- mapIds(org.Hs.eg.db, keys = ensemblsIDS, keytype = "ENSEMBL", column="SYMBOL")
+
+ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
+
+getBM(attributes='hgnc_symbol', 
+      filters = 'ensembl_gene_id', 
+      values = ensemblsIDS, 
+      mart = ensembl)
+
+df_FC <-merge(symbols,FC,by='row.names',all=TRUE)
+
+df_FC= na.omit(df_FC) # remove NAs... 126 observations now
+
+library(dplyr)
+row.names(df_FC)=df_FC$x #if prefer genes as row names 
+final_FC=df_FC[,3:8]
+
+final_FC=final_FC[order(final_FC$pvalue),]
+
+#rename(final_FC, Gene_Symbol= x) # if prefer genes to have their own column 
+
+library(xlsx)
+write.xlsx(final_FC, "downregulated_DEGs_airway.xlsx")
+
+```
+
+```{r Convert FC_1 ensemble to gene symbol & export xlsx, echo=FALSE}
+
+BiocManager::install("EnsDb.Hsapiens.v79")
+library(EnsDb.Hsapiens.v79)
+library(org.Hs.eg.db)
+library("biomaRt")
+
+ensemblsIDS= row.names(FC_1) 
+
+symbols <- mapIds(org.Hs.eg.db, keys = ensemblsIDS, keytype = "ENSEMBL", column="SYMBOL")
+
+ensembl = useMart("ensembl",dataset="hsapiens_gene_ensembl")
+
+getBM(attributes='hgnc_symbol', 
+      filters = 'ensembl_gene_id', 
+      values = ensemblsIDS, 
+      mart = ensembl)
+
+df_FC_1 <-merge(symbols,FC_1,by='row.names',all=TRUE)
+
+df_FC_1= na.omit(df_FC_1) # remove NAs... 126 observations now
+
+library(dplyr)
+row.names(df_FC_1)=df_FC_1$x #if prefer genes as row names 
+final_FC_1=df_FC_1[,3:8]
+
+final_FC_1=final_FC_1[order(final_FC_1$pvalue),]
+
+#rename(final_FC_1, Gene_Symbol= x) # if prefer genes to have their own column 
+
+library(xlsx)
+write.xlsx(final_FC_1, "upregulated_DEGs_airway.xlsx")
+
+```
+
