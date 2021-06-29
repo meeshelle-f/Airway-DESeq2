@@ -1,5 +1,5 @@
 # Airway-DESeq2-RNA-seq transcriptome profiling PMID:24926665. 
-Updated R-analysis and replicate of https://github.com/blancahimes/taffeta
+R-analysis of https://github.com/blancahimes/taffeta
 
 Summary:
 Glucocorticoid MOA to suppress inflammation in ASM not understood. 
