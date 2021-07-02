@@ -5,3 +5,6 @@ Summary:
 Glucocorticoid MOA to suppress inflammation in ASM not understood. 
 4 primary human airway smooth muscle (ASM) cell lines were treated with or without dexamethasone, a glucocorticoid. 
 Identified 316 DEGs, including DUSP1, KLF15, PER1, TSC22D3, C7, CCDC69, and CRISPLD2 glucocorticoid-responsive genes. 
+
+Project: 
+Replicate DEG analysis with updated DESeq2 package compared to using edgeR, in R. 
